@@ -1,0 +1,33 @@
+.card-labels {
+    margin-left: 10px;
+}
+
+.card-label {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-left: 4px;
+}
+
+.trello-card-item {
+    padding: 8px;
+    border-radius: 6px;
+}
+
+.trello-card-name {
+    font-weight: normal;
+}
+
+.trello-card-list {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9em;
+    margin-top: 4px;
+}
+
+.trello-list-header {
+    font-weight: bold;
+    font-size: 1.1em;
+    background-color: rgba(120, 120, 120, 0.15);
+    border-radius: 6px;
+    margin: 2px 0;
+}

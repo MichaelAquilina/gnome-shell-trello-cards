@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.trello-cards" path="/org/gnome/shell/extensions/trello-cards/">
+    <key name="api-key" type="s">
+      <default>''</default>
+      <summary>Trello API Key</summary>
+      <description>Your Trello API key from https://trello.com/app-key</description>
+    </key>
+    <key name="token" type="s">
+      <default>''</default>
+      <summary>Trello API Token</summary>
+      <description>Your Trello API token for authentication</description>
+    </key>
+    <key name="board-id" type="s">
+      <default>''</default>
+      <summary>Trello Board ID</summary>
+      <description>The ID of the Trello board to display cards from</description>
+    </key>
+    <key name="refresh-interval" type="i">
+      <default>5</default>
+      <summary>Refresh Interval</summary>
+      <description>How often to refresh the card list (in minutes)</description>
+    </key>
+    <key name="show-card-count" type="b">
+      <default>true</default>
+      <summary>Show Card Count</summary>
+      <description>Display the number of cards in the panel</description>
+    </key>
+  </schema>
+</schemalist>
