@@ -15,6 +15,50 @@ const SCHEMA_NAME = 'org.gnome.shell.extensions.trello-cards';
 
 let timeout;
 
+async function closeCard(cardId, apiKey, token) {
+    console.log("Closing card", cardId);
+    try {
+        let session = new Soup.Session();
+        let message = Soup.Message.new(
+            'PUT', `https://api.trello.com/1/cards/${cardId}/closed?token=${token}&key=${apiKey}`
+        );
+        const data = JSON.stringify({
+            value: true
+        });
+        const values = GLib.Bytes.new(data);
+        message.set_request_body_from_bytes('application/json', values);
+        const bytes = await new Promise((resolve, reject) => {
+            session.send_and_read_async(
+                message,
+                GLib.PRIORITY_DEFAULT,
+                null,
+                (session, result) => {
+                    try {
+                        const status = message.get_status();
+                        if (status !== Soup.Status.OK) {
+                            reject(new Error(`HTTP error ${status}`));
+                            return;
+                        }
+
+                        const bytes = session.send_and_read_finish(result);
+                        resolve(bytes);
+                    } catch (e) {
+                        reject(e);
+                    }
+                },
+            );
+        });
+        // Parse the response
+        const decoder = new TextDecoder('utf-8');
+        const response = decoder.decode(bytes.get_data());
+        const result = JSON.parse(response);
+        return result;
+    } catch(error) {
+        console.error(error);
+        throw error;
+    }
+}
+
 async function fetchBoardLists(boardId, apiKey, token) {
     try {
         let session = new Soup.Session();
@@ -149,29 +193,25 @@ class TrelloCardsIndicator extends PanelMenu.Button {
 
                 // Add cards to the menu
                 cards.forEach(card => {
-                    let cardItem = new PopupMenu.PopupMenuItem(
-                        `${card.name}`
-                    );
+                    let cardItem = new PopupMenu.PopupMenuItem(card.name);
+                    let buttonBox = new St.BoxLayout({
+                        style_class: 'card-buttons',
+                        x_expand: true,
+                        x_align: Clutter.ActorAlign.END
+                    });
 
-                    // Add label indicators if card has labels
-                    if (card.labels && card.labels.length > 0) {
-                        let labelBox = new St.BoxLayout({
-                            style_class: 'card-labels',
-                            x_expand: true,
-                            x_align: Clutter.ActorAlign.END
-                        });
+                    const closeButton = new St.Button({
+                        style_class: 'button',
+                        label: 'Close',
+                        x_expand: true
+                    });
+                    closeButton.connect('clicked', async () => {
+                        await closeCard(card.id, apiKey, token);
+                        this.refreshCards();
+                    });
 
-                        card.labels.forEach(label => {
-                            let labelIndicator = new St.Icon({
-                                style_class: 'card-label',
-                                style: `background-color: ${label.color || '#999'};`,
-                                icon_size: 8
-                            });
-                            labelBox.add_child(labelIndicator);
-                        });
-
-                        cardItem.add_child(labelBox);
-                    }
+                    buttonBox.add_child(closeButton);
+                    cardItem.add_child(buttonBox);
 
                     // Open card in browser when clicked
                     cardItem.connect('activate', () => {
