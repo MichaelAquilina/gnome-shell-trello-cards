@@ -15,6 +15,48 @@ const SCHEMA_NAME = 'org.gnome.shell.extensions.trello-cards';
 
 let timeout;
 
+async function fetchBoardLists(boardId, apiKey, token) {
+    try {
+        let session = new Soup.Session();
+        let message = Soup.Message.new(
+            'GET',
+            `https://api.trello.com/1/boards/${boardId}/lists?key=${apiKey}&token=${token}&cards=open`
+        );
+
+        const bytes = await new Promise((resolve, reject) => {
+            session.send_and_read_async(
+                message,
+                GLib.PRIORITY_DEFAULT,
+                null,
+                (session, result) => {
+                    try {
+                        const status = message.get_status();
+                        if (status !== Soup.Status.OK) {
+                            reject(new Error(`HTTP error ${status}`));
+                            return;
+                        }
+
+                        const bytes = session.send_and_read_finish(result);
+                        resolve(bytes);
+                    } catch (e) {
+                        reject(e);
+                    }
+                }
+            );
+        });
+
+        // Parse the response
+        const decoder = new TextDecoder('utf-8');
+        const response = decoder.decode(bytes.get_data());
+        const cards = JSON.parse(response);
+        return cards;
+
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
+
 const TrelloCardsIndicator = GObject.registerClass(
 class TrelloCardsIndicator extends PanelMenu.Button {
     constructor(settings) {
@@ -73,7 +115,15 @@ class TrelloCardsIndicator extends PanelMenu.Button {
         let loadingItem = new PopupMenu.PopupMenuItem("Loading cards...");
         this.cardsSection.addMenuItem(loadingItem);
 
-        this.fetchLists().then(lists => {
+        const apiKey = this._settings.get_string('api-key');
+        const token = this._settings.get_string('token');
+        const boardId = this._settings.get_string('board-id');
+
+        if (!apiKey || !token || !boardId) {
+            throw new Error("Missing Trello credentials. Please check extension settings.");
+        }
+
+        fetchBoardLists(boardId, apiKey, token).then(lists => {
             for(const list of lists) {
                 // TODO: Hacky! needs to be updated
                 if (list.name != "Today") {
@@ -143,58 +193,6 @@ class TrelloCardsIndicator extends PanelMenu.Button {
             let errorItem = new PopupMenu.PopupMenuItem(`Error: ${error.message}`);
             this.cardsSection.addMenuItem(errorItem);
         });
-    }
-
-    async fetchLists() {
-        try {
-            const apiKey = this._settings.get_string('api-key');
-            const token = this._settings.get_string('token');
-            const boardId = this._settings.get_string('board-id');
-
-            if (!apiKey || !token || !boardId) {
-                throw new Error("Missing Trello credentials. Please check extension settings.");
-            }
-
-            // Create the session
-            let session = new Soup.Session();
-            let message = Soup.Message.new(
-                'GET',
-                `https://api.trello.com/1/boards/${boardId}/lists?key=${apiKey}&token=${token}&cards=open`
-            );
-
-            // Using Soup 3.0 API (GNOME 40+)
-            const bytes = await new Promise((resolve, reject) => {
-                session.send_and_read_async(
-                    message,
-                    GLib.PRIORITY_DEFAULT,
-                    null,
-                    (session, result) => {
-                        try {
-                            const status = message.get_status();
-                            if (status !== Soup.Status.OK) {
-                                reject(new Error(`HTTP error ${status}`));
-                                return;
-                            }
-
-                            const bytes = session.send_and_read_finish(result);
-                            resolve(bytes);
-                        } catch (e) {
-                            reject(e);
-                        }
-                    }
-                );
-            });
-
-            // Parse the response
-            const decoder = new TextDecoder('utf-8');
-            const response = decoder.decode(bytes.get_data());
-            const cards = JSON.parse(response);
-            return cards;
-
-        } catch (error) {
-            console.error(error);
-            throw error;
-        }
     }
 });
 
