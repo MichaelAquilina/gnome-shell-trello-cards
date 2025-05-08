@@ -58,7 +58,7 @@ class TrelloCardsIndicator extends PanelMenu.Button {
         // Open extension preferences
         try {
             const proc = Gio.Subprocess.new(
-                ['gnome-extensions', 'prefs', 'trello-cards@yourdomain.com'],
+                ['gnome-extensions', 'prefs', 'trello-cards@michaelaquilina.github.io'],
                 Gio.SubprocessFlags.NONE
             );
         } catch (e) {
