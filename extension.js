@@ -137,22 +137,6 @@ class TrelloCardsIndicator extends PanelMenu.Button {
 
                     this.cardsSection.addMenuItem(cardItem);
                 });
-
-                // Add a "View Board" item
-                this.cardsSection.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-                let viewBoardItem = new PopupMenu.PopupMenuItem("View Board in Browser");
-                viewBoardItem.connect('activate', () => {
-                    try {
-                        const boardId = this._settings.get_string('board-id');
-                        const proc = Gio.Subprocess.new(
-                            ['xdg-open', `https://trello.com/b/${boardId}`],
-                            Gio.SubprocessFlags.NONE
-                        );
-                    } catch (e) {
-                        console.error(e);
-                    }
-                });
-                this.cardsSection.addMenuItem(viewBoardItem);
             }
         }).catch(error => {
             this.cardsSection.removeAll();
