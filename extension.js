@@ -73,79 +73,87 @@ class TrelloCardsIndicator extends PanelMenu.Button {
         let loadingItem = new PopupMenu.PopupMenuItem("Loading cards...");
         this.cardsSection.addMenuItem(loadingItem);
 
-        this.fetchCards().then(cards => {
-            // Remove loading indicator
-            this.cardsSection.removeAll();
-
-            if (!cards || cards.length === 0) {
-                let noCardsItem = new PopupMenu.PopupMenuItem("No cards found");
-                this.cardsSection.addMenuItem(noCardsItem);
-                return;
-            }
-
-            // Update the button text with card count if enabled
-            if (this._settings.get_boolean('show-card-count')) {
-                this.buttonText.set_text(`🃏 ${cards.length}`);
-            } else {
-                this.buttonText.set_text('🃏');
-            }
-
-            // Add cards to the menu
-            cards.forEach(card => {
-                let cardItem = new PopupMenu.PopupMenuItem(
-                    `${card.name}`
-                );
-
-                // Add label indicators if card has labels
-                if (card.labels && card.labels.length > 0) {
-                    let labelBox = new St.BoxLayout({
-                        style_class: 'card-labels',
-                        x_expand: true,
-                        x_align: Clutter.ActorAlign.END
-                    });
-
-                    card.labels.forEach(label => {
-                        let labelIndicator = new St.Icon({
-                            style_class: 'card-label',
-                            style: `background-color: ${label.color || '#999'};`,
-                            icon_size: 8
-                        });
-                        labelBox.add_child(labelIndicator);
-                    });
-
-                    cardItem.add_child(labelBox);
+        this.fetchLists().then(lists => {
+            for(const list of lists) {
+                // TODO: Hacky! needs to be updated
+                if (list.name != "Today") {
+                    continue
                 }
 
-                // Open card in browser when clicked
-                cardItem.connect('activate', () => {
+                const cards = list.cards;
+                // Remove loading indicator
+                this.cardsSection.removeAll();
+
+                if (!cards || cards.length === 0) {
+                    let noCardsItem = new PopupMenu.PopupMenuItem("No cards found");
+                    this.cardsSection.addMenuItem(noCardsItem);
+                    return;
+                }
+
+                // Update the button text with card count if enabled
+                if (this._settings.get_boolean('show-card-count')) {
+                    this.buttonText.set_text(`🃏 ${cards.length}`);
+                } else {
+                    this.buttonText.set_text('🃏');
+                }
+
+                // Add cards to the menu
+                cards.forEach(card => {
+                    let cardItem = new PopupMenu.PopupMenuItem(
+                        `${card.name}`
+                    );
+
+                    // Add label indicators if card has labels
+                    if (card.labels && card.labels.length > 0) {
+                        let labelBox = new St.BoxLayout({
+                            style_class: 'card-labels',
+                            x_expand: true,
+                            x_align: Clutter.ActorAlign.END
+                        });
+
+                        card.labels.forEach(label => {
+                            let labelIndicator = new St.Icon({
+                                style_class: 'card-label',
+                                style: `background-color: ${label.color || '#999'};`,
+                                icon_size: 8
+                            });
+                            labelBox.add_child(labelIndicator);
+                        });
+
+                        cardItem.add_child(labelBox);
+                    }
+
+                    // Open card in browser when clicked
+                    cardItem.connect('activate', () => {
+                        try {
+                            const proc = Gio.Subprocess.new(
+                                ['xdg-open', card.url],
+                                Gio.SubprocessFlags.NONE
+                            );
+                        } catch (e) {
+                            console.error(e);
+                        }
+                    });
+
+                    this.cardsSection.addMenuItem(cardItem);
+                });
+
+                // Add a "View Board" item
+                this.cardsSection.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+                let viewBoardItem = new PopupMenu.PopupMenuItem("View Board in Browser");
+                viewBoardItem.connect('activate', () => {
                     try {
+                        const boardId = this._settings.get_string('board-id');
                         const proc = Gio.Subprocess.new(
-                            ['xdg-open', card.url],
+                            ['xdg-open', `https://trello.com/b/${boardId}`],
                             Gio.SubprocessFlags.NONE
                         );
                     } catch (e) {
                         console.error(e);
                     }
                 });
-
-                this.cardsSection.addMenuItem(cardItem);
-            });
-
-            // Add a "View Board" item
-            this.cardsSection.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-            let viewBoardItem = new PopupMenu.PopupMenuItem("View Board in Browser");
-            viewBoardItem.connect('activate', () => {
-                try {
-                    const boardId = this._settings.get_string('board-id');
-                    const proc = Gio.Subprocess.new(
-                        ['xdg-open', `https://trello.com/b/${boardId}`],
-                        Gio.SubprocessFlags.NONE
-                    );
-                } catch (e) {
-                    console.error(e);
-                }
-            });
-            this.cardsSection.addMenuItem(viewBoardItem);
+                this.cardsSection.addMenuItem(viewBoardItem);
+            }
         }).catch(error => {
             this.cardsSection.removeAll();
             let errorItem = new PopupMenu.PopupMenuItem(`Error: ${error.message}`);
@@ -153,7 +161,7 @@ class TrelloCardsIndicator extends PanelMenu.Button {
         });
     }
 
-    async fetchCards() {
+    async fetchLists() {
         try {
             const apiKey = this._settings.get_string('api-key');
             const token = this._settings.get_string('token');
@@ -167,7 +175,7 @@ class TrelloCardsIndicator extends PanelMenu.Button {
             let session = new Soup.Session();
             let message = Soup.Message.new(
                 'GET',
-                `https://api.trello.com/1/boards/${boardId}/cards?key=${apiKey}&token=${token}`
+                `https://api.trello.com/1/boards/${boardId}/lists?key=${apiKey}&token=${token}&cards=open`
             );
 
             // Using Soup 3.0 API (GNOME 40+)
