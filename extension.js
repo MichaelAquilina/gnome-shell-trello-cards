@@ -85,6 +85,18 @@ class TrelloCardsIndicator extends PanelMenu.Button {
         }
 
         fetchBoardLists(boardId, apiKey, token).then(lists => {
+            // Remove loading indicator
+            this.cardsSection.removeAll();
+
+            if (!lists || lists.length === 0) {
+                let noListsItem = new PopupMenu.PopupMenuItem("No lists found");
+                this.cardsSection.addMenuItem(noListsItem);
+                return;
+            }
+
+            let cardCount = 0;
+
+
             for(const list of lists) {
                 // TODO: Hacky! needs to be updated
                 if (list.name != "Today") {
@@ -92,21 +104,7 @@ class TrelloCardsIndicator extends PanelMenu.Button {
                 }
 
                 const cards = list.cards;
-                // Remove loading indicator
-                this.cardsSection.removeAll();
-
-                if (!cards || cards.length === 0) {
-                    let noCardsItem = new PopupMenu.PopupMenuItem("No cards found");
-                    this.cardsSection.addMenuItem(noCardsItem);
-                    return;
-                }
-
-                // Update the button text with card count if enabled
-                if (this._settings.get_boolean('show-card-count')) {
-                    this.buttonText.set_text(`🃏 ${cards.length}`);
-                } else {
-                    this.buttonText.set_text('🃏');
-                }
+                cardCount += cards.length;
 
                 // Add cards to the menu
                 cards.forEach(card => {
@@ -144,6 +142,13 @@ class TrelloCardsIndicator extends PanelMenu.Button {
 
                     this.cardsSection.addMenuItem(cardItem);
                 });
+            }
+
+            // Update the button text with card count if enabled
+            if (this._settings.get_boolean('show-card-count')) {
+                this.buttonText.set_text(`🃏 ${cardCount}`);
+            } else {
+                this.buttonText.set_text('🃏');
             }
         }).catch(error => {
             this.cardsSection.removeAll();
