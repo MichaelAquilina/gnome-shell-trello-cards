@@ -105,6 +105,9 @@ class TrelloCardsIndicator extends PanelMenu.Button {
         });
         this.menu.addMenuItem(refreshMenuItem);
 
+        // make sure its always up to date when clicked
+        this.connect('button-press-event', () => {this.refreshCards()});
+
         // Initial load
         this.refreshCards();
     }
