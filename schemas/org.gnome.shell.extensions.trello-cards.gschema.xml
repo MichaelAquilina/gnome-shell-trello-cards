@@ -13,8 +13,8 @@
     </key>
     <key name="board-id" type="s">
       <default>''</default>
-      <summary>Trello Board ID</summary>
-      <description>The ID of the Trello board to display cards from</description>
+      <summary>Trello Board</summary>
+      <description>The id (or url) of the Trello board to display cards from</description>
     </key>
     <key name="refresh-interval" type="i">
       <default>5</default>

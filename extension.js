@@ -78,6 +78,33 @@ const TrelloCardsIndicator = GObject.registerClass(
       }
     }
 
+    createCard(list) {
+      console.log("Creating new card");
+      Gio.Subprocess.new(
+        // TODO: retrieve board name
+        [
+          "kitty",
+          "-e",
+          "zsh",
+          "-l",
+          "-c",
+          `EDITOR=nvim tro create work "${list.name}" -s`,
+        ],
+        Gio.SubprocessFlags.NONE,
+      );
+    }
+
+    getBoardId() {
+      const boardUrlRegex = /https:\/\/trello\.com\/b\/([a-zA-Z0-9]+)(?:\/|\b)/;
+      const boardId = this._settings.get_string("board-id");
+      const match = boardId.match(boardUrlRegex);
+      if (match) {
+        return match[1];
+      } else {
+        return boardId;
+      }
+    }
+
     refreshCards() {
       this.cardsSection.removeAll();
 
@@ -87,9 +114,7 @@ const TrelloCardsIndicator = GObject.registerClass(
 
       const apiKey = this._settings.get_string("api-key");
       const token = this._settings.get_string("token");
-      // TODO: should also accept board urls and automatically detect
-      // and parse the boardId out
-      const boardId = this._settings.get_string("board-id");
+      const boardId = this.getBoardId();
 
       if (!apiKey || !token || !boardId) {
         throw new Error(
