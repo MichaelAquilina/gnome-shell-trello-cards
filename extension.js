@@ -168,26 +168,32 @@ const TrelloCardsIndicator = GObject.registerClass(
 
               // Open card in browser when clicked
               cardItem.connect("activate", () => {
-                try {
-                  const proc = Gio.Subprocess.new(
-                    // TODO: retrieve board name
-                    [
-                      "kitty",
-                      "-e",
-                      "zsh",
-                      "-l",
-                      "-c",
-                      `EDITOR=nvim tro show work "${list.name}" "${card.name}"`,
-                    ],
-                    Gio.SubprocessFlags.NONE,
-                  );
-                } catch (e) {
-                  console.error(e);
-                }
+                Gio.Subprocess.new(
+                  // TODO: retrieve board name
+                  [
+                    "kitty",
+                    "-e",
+                    "zsh",
+                    "-l",
+                    "-c",
+                    `EDITOR=nvim tro show work "${list.name}" "${card.name}"`,
+                  ],
+                  Gio.SubprocessFlags.NONE,
+                );
               });
 
               this.cardsSection.addMenuItem(cardItem);
             });
+
+            this.cardsSection.addMenuItem(
+              new PopupMenu.PopupSeparatorMenuItem(),
+            );
+            let createMenuItem = new PopupMenu.PopupMenuItem("Create New");
+            createMenuItem.connect("activate", () => {
+              this.createCard(list);
+              this.refreshCards();
+            });
+            this.cardsSection.addMenuItem(createMenuItem);
           }
 
           // Update the button text with card count if enabled
