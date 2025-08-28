@@ -100,6 +100,7 @@ const TrelloCardsIndicator = GObject.registerClass(
 
       this._settings = settings;
       this._listConfig = listConfig;
+      this._boardName = null; // Will be fetched asynchronously
 
       // Create the panel button
       this.buttonText = new St.Label({
@@ -118,24 +119,55 @@ const TrelloCardsIndicator = GObject.registerClass(
         this.refreshCards();
       });
 
-      // Initial load
-      this.refreshCards();
+      // Fetch board name and initial load
+      this._fetchBoardName()
+        .then(() => {
+          this.refreshCards();
+        })
+        .catch((error) => {
+          console.error("Failed to fetch board name:", error);
+          this.refreshCards(); // Still load cards even if board name fetch fails
+        });
+    }
+
+    async _fetchBoardName() {
+      try {
+        const apiKey = this._settings.get_string("api-key");
+        const token = this._settings.get_string("token");
+
+        if (!apiKey || !token) {
+          console.warn("No API credentials available for board name fetch");
+          return;
+        }
+
+        const boardId = this.getBoardId();
+        if (!boardId) {
+          console.warn("No board ID available for board name fetch");
+          return;
+        }
+
+        const boardInfo = await validateBoardAccess(boardId, apiKey, token);
+        this._boardName = boardInfo.name;
+        console.log(`Successfully fetched board name: ${this._boardName}`);
+      } catch (error) {
+        console.error("Failed to fetch board name:", error);
+        // Keep _boardName as null, will fall back to default behavior
+      }
     }
 
     createCard(list) {
       console.log("Creating new card");
-      Gio.Subprocess.new(
-        // TODO: retrieve board name
-        [
-          "kitty",
-          "-e",
-          "zsh",
-          "-l",
-          "-c",
-          `EDITOR=nvim tro create work "${list.name}" -s`,
-        ],
-        Gio.SubprocessFlags.NONE,
-      );
+      const boardName = this._boardName || "work"; // Fallback to "work" if board name not available
+      const command = [
+        "kitty",
+        "-e",
+        "zsh",
+        "-l",
+        "-c",
+        `EDITOR=nvim tro create "${boardName}" "${list.name}" -s`,
+      ];
+      console.log("Running command", command);
+      Gio.Subprocess.new(command, Gio.SubprocessFlags.NONE);
     }
 
     _getButtonText(cardCount = null) {
@@ -286,15 +318,15 @@ const TrelloCardsIndicator = GObject.registerClass(
 
               // Open card in browser when clicked
               cardItem.connect("activate", () => {
+                const boardName = this._boardName || "work"; // Fallback to "work" if board name not available
                 Gio.Subprocess.new(
-                  // TODO: retrieve board name
                   [
                     "kitty",
                     "-e",
                     "zsh",
                     "-l",
                     "-c",
-                    `EDITOR=nvim tro show work "${list.name}" "${card.name}"`,
+                    `EDITOR=nvim tro show "${boardName}" "${list.name}" "${card.name}"`,
                   ],
                   Gio.SubprocessFlags.NONE,
                 );
