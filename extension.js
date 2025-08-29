@@ -157,7 +157,7 @@ const TrelloCardsIndicator = GObject.registerClass(
 
     createCard(list) {
       console.log("Creating new card");
-      const boardName = this._boardName || "work"; // Fallback to "work" if board name not available
+      const boardName = this._boardName;
       const command = [
         "kitty",
         "-e",
@@ -318,7 +318,7 @@ const TrelloCardsIndicator = GObject.registerClass(
 
               // Open card in browser when clicked
               cardItem.connect("activate", () => {
-                const boardName = this._boardName || "work"; // Fallback to "work" if board name not available
+                const boardName = this._boardName;
                 Gio.Subprocess.new(
                   [
                     "kitty",
