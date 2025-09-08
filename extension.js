@@ -436,7 +436,12 @@ export default class TrelloCardsExtension extends Extension {
 
     // Create main extension indicator
     this._mainIndicator = new TrelloCardsMainIndicator(this._settings);
-    Main.panel.addToStatusArea("trello-cards-main", this._mainIndicator);
+    Main.panel.addToStatusArea(
+      "trello-cards-main",
+      this._mainIndicator,
+      1,
+      this._getPanelPosition(),
+    );
 
     // Set up refresh callback for main indicator
     this._mainIndicator.setRefreshCallback(() => {
@@ -495,6 +500,11 @@ export default class TrelloCardsExtension extends Extension {
     }
   }
 
+  _getPanelPosition() {
+    let [position] = this._settings.get_value("panel-position").get_string();
+    return position;
+  }
+
   _createIndicators() {
     // Destroy existing indicators first
     this._destroyIndicators();
@@ -511,13 +521,15 @@ export default class TrelloCardsExtension extends Extension {
       return;
     }
 
+    let position = this._getPanelPosition();
+
     // Create an indicator for each target list
     targetListsConfig.forEach((listConfig, index) => {
       try {
         const indicator = new TrelloCardsIndicator(this._settings, listConfig);
         const statusAreaName =
           index === 0 ? "trello-cards" : `trello-cards-${index}`;
-        Main.panel.addToStatusArea(statusAreaName, indicator);
+        Main.panel.addToStatusArea(statusAreaName, indicator, 1, position);
         this._indicators.push(indicator);
       } catch (error) {
         console.error(

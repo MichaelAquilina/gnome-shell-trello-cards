@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
+  <enum id="org.gnome.shell.extensions.improved-workspace-indicator.position">
+    <value value="0" nick="left"/>
+    <value value="1" nick="right"/>
+    <value value="2" nick="center"/>
+  </enum>
   <schema id="org.gnome.shell.extensions.trello-cards" path="/org/gnome/shell/extensions/trello-cards/">
     <key name="api-key" type="s">
       <default>''</default>
@@ -10,6 +15,11 @@
       <default>''</default>
       <summary>Trello API Token</summary>
       <description>Your Trello API token for authentication</description>
+    </key>
+
+    <key name="panel-position" enum="org.gnome.shell.extensions.improved-workspace-indicator.position">
+      <default>'left'</default>
+      <summary>Position of the indicators in the status bar.</summary>
     </key>
 
     <key name="refresh-interval" type="i">
