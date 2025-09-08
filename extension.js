@@ -110,6 +110,15 @@ const TrelloCardsIndicator = GObject.registerClass(
 
       this.add_child(this.buttonText);
 
+      let headerItem = new PopupMenu.PopupMenuItem(listConfig.listName, {
+        reactive: false,
+        can_focus: false,
+      });
+
+      // Style it as a header
+      headerItem.label.style_class = "popup-header";
+      this.menu.addMenuItem(headerItem);
+
       // Create menu section for cards
       this.cardsSection = new PopupMenu.PopupMenuSection();
       this.menu.addMenuItem(this.cardsSection);
