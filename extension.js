@@ -102,36 +102,37 @@ const TrelloCardsIndicator = GObject.registerClass(
       this._listConfig = listConfig;
       this._boardName = null; // Will be fetched asynchronously
 
-      // Create the panel button
-      this.buttonText = new St.Label({
-        text: this._getButtonText(),
-        y_align: Clutter.ActorAlign.CENTER,
-      });
-
-      this.add_child(this.buttonText);
-
-      let headerItem = new PopupMenu.PopupMenuItem(listConfig.listName, {
-        reactive: false,
-        can_focus: false,
-      });
-
-      // Style it as a header
-      headerItem.label.style_class = "popup-header";
-      this.menu.addMenuItem(headerItem);
-
-      // Create menu section for cards
-      this.cardsSection = new PopupMenu.PopupMenuSection();
-      this.menu.addMenuItem(this.cardsSection);
-
-      // make sure its always up to date when clicked
-      this.connect("button-press-event", () => {
-        this.refreshCards();
-      });
-
       // Fetch board name and initial load
       this._fetchBoardName()
         .then(() => {
-          this.refreshCards();
+          // Create the panel button
+          this.buttonText = new St.Label({
+            text: this._getButtonText(),
+            y_align: Clutter.ActorAlign.CENTER,
+          });
+
+          this.add_child(this.buttonText);
+
+          let headerItem = new PopupMenu.PopupMenuItem(
+            `${this._boardName} - ${listConfig.listName}`,
+            {
+              reactive: false,
+              can_focus: false,
+            },
+          );
+
+          // Style it as a header
+          headerItem.label.style_class = "popup-header";
+          this.menu.addMenuItem(headerItem);
+
+          // Create menu section for cards
+          this.cardsSection = new PopupMenu.PopupMenuSection();
+          this.menu.addMenuItem(this.cardsSection);
+
+          // make sure its always up to date when clicked
+          this.connect("button-press-event", () => {
+            this.refreshCards();
+          });
         })
         .catch((error) => {
           console.error("Failed to fetch board name:", error);
