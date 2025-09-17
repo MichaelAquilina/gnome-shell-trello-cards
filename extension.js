@@ -133,6 +133,8 @@ const TrelloCardsIndicator = GObject.registerClass(
           this.connect("button-press-event", () => {
             this.refreshCards();
           });
+
+          this.refreshCards();
         })
         .catch((error) => {
           console.error("Failed to fetch board name:", error);
