@@ -10,6 +10,7 @@ import {
 } from "resource:///org/gnome/shell/extensions/extension.js";
 import {
   closeCard,
+  createCard,
   fetchBoardLists,
   fetchAvailableLists,
   getBoard,
@@ -166,19 +167,23 @@ const TrelloCardsIndicator = GObject.registerClass(
       }
     }
 
-    createCard(list, cardText) {
+    createCard(list, cardText, edit) {
       console.log("Creating new card");
       const boardName = this._boardName;
-      const command = [
-        "kitty",
-        "-e",
-        "zsh",
-        "-l",
-        "-c",
-        `EDITOR=nvim tro create "${boardName}" "${list.name}" -n "${cardText}" -s`,
-      ];
-      console.log("Running command", command);
-      Gio.Subprocess.new(command, Gio.SubprocessFlags.NONE);
+
+      const troCommand = `tro create "${boardName}" "${list.name}" -n "${cardText}"`;
+      console.log("Running command", troCommand);
+      if (edit) {
+        troCommand += `EDITOR=nvim ${troCommand} -s`;
+        const command = ["kitty", "-e", "zsh", "-l", "-c", troCommand];
+        Gio.Subprocess.new(command, Gio.SubprocessFlags.NONE);
+      } else {
+        // TODO(Mike): this not great. It should probably defined
+        // on some type of trello client instance instead
+        const apiKey = this._settings.get_string("api-key");
+        const token = this._settings.get_string("token");
+        createCard(cardText, list.id, apiKey, token);
+      }
     }
 
     _getButtonText(cardCount = null) {
@@ -360,9 +365,11 @@ const TrelloCardsIndicator = GObject.registerClass(
               x_expand: true,
             });
             createNew.clutter_text.connect("activate", () => {
+              let edit = false;
               let cardText = createNew.get_text();
-              this.createCard(list, cardText);
+              this.createCard(list, cardText, edit);
               this.menu.close();
+              this.refreshCards();
             });
 
             menuItem.actor.add_child(createNew);

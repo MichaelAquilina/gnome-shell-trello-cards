@@ -31,6 +31,13 @@ export async function closeCard(cardId, apiKey, token) {
   return request("PUT", url, { data });
 }
 
+export async function createCard(name, listId, apiKey, token) {
+  console.log("Creating card", name, listId);
+  const url = `https://api.trello.com/1/cards?token=${token}&key=${apiKey}`;
+  const data = { name: name, idList: listId };
+  return request("POST", url, { data });
+}
+
 export async function fetchBoardLists(boardId, apiKey, token) {
   console.log("Fetching Board Lists for board:", boardId);
   const url = `https://api.trello.com/1/boards/${boardId}/lists?key=${apiKey}&token=${token}&cards=open`;
