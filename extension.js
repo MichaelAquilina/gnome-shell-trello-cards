@@ -166,7 +166,7 @@ const TrelloCardsIndicator = GObject.registerClass(
       }
     }
 
-    createCard(list) {
+    createCard(list, cardText) {
       console.log("Creating new card");
       const boardName = this._boardName;
       const command = [
@@ -175,7 +175,7 @@ const TrelloCardsIndicator = GObject.registerClass(
         "zsh",
         "-l",
         "-c",
-        `EDITOR=nvim tro create "${boardName}" "${list.name}" -s`,
+        `EDITOR=nvim tro create "${boardName}" "${list.name}" -n "${cardText}" -s`,
       ];
       console.log("Running command", command);
       Gio.Subprocess.new(command, Gio.SubprocessFlags.NONE);
@@ -349,12 +349,24 @@ const TrelloCardsIndicator = GObject.registerClass(
             this.cardsSection.addMenuItem(
               new PopupMenu.PopupSeparatorMenuItem(),
             );
-            let createMenuItem = new PopupMenu.PopupMenuItem("Create New");
-            createMenuItem.connect("activate", () => {
-              this.createCard(list);
-              this.refreshCards();
+
+            let menuItem = new PopupMenu.PopupBaseMenuItem({
+              reactive: false, // Don't close menu when clicked
+              can_focus: false,
             });
-            this.cardsSection.addMenuItem(createMenuItem);
+            let createNew = new St.Entry({
+              hint_text: "Create New Card",
+              can_focus: true,
+              x_expand: true,
+            });
+            createNew.clutter_text.connect("activate", () => {
+              let cardText = createNew.get_text();
+              this.createCard(list, cardText);
+              this.menu.close();
+            });
+
+            menuItem.actor.add_child(createNew);
+            this.cardsSection.addMenuItem(menuItem);
           }
 
           if (!targetListFound) {
