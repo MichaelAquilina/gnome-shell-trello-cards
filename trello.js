@@ -70,7 +70,7 @@ export async function fetchAvailableLists(boardId, apiKey, token) {
   }
 }
 
-export async function validateBoardAccess(boardId, apiKey, token) {
+export async function getBoard(boardId, apiKey, token) {
   console.log("Validating access to board:", boardId);
   const url = `https://api.trello.com/1/boards/${boardId}?key=${apiKey}&token=${token}&fields=name,id`;
   try {

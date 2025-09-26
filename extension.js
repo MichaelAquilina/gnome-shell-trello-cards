@@ -12,14 +12,13 @@ import {
   closeCard,
   fetchBoardLists,
   fetchAvailableLists,
-  validateBoardAccess,
+  getBoard,
   matchesGlobPattern,
 } from "./trello.js";
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import * as PanelMenu from "resource:///org/gnome/shell/ui/panelMenu.js";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
 
-// Settings schema
 const SCHEMA_NAME = "org.gnome.shell.extensions.trello-cards";
 
 let timeout;
@@ -158,7 +157,7 @@ const TrelloCardsIndicator = GObject.registerClass(
           return;
         }
 
-        const boardInfo = await validateBoardAccess(boardId, apiKey, token);
+        const boardInfo = await getBoard(boardId, apiKey, token);
         this._boardName = boardInfo.name;
         console.log(`Successfully fetched board name: ${this._boardName}`);
       } catch (error) {
