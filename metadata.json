@@ -2,7 +2,7 @@
   "name": "Trello Cards",
   "description": "Display cards from your Trello boards in the GNOME Shell panel",
   "uuid": "trello-cards@michaelaquilina.github.io",
-  "shell-version": ["45", "46", "47", "48"],
+  "shell-version": ["45", "46", "47", "48", "49"],
   "version": 1,
   "url": "https://github.com/MichaelAquilina/trello-cards",
   "settings-schema": "org.gnome.shell.extensions.trello-cards"
