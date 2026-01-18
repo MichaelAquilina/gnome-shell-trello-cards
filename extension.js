@@ -206,7 +206,7 @@ const TrelloCardsIndicator = GObject.registerClass(
       let text = parts.join(" ");
 
       if (showCount && cardCount !== null) {
-        text += ` (${cardCount})`;
+        text += ` ${cardCount}`;
       }
 
       // Fallback if nothing is enabled
