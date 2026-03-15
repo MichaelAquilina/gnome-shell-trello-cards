@@ -160,7 +160,7 @@ const TrelloCardsIndicator = GObject.registerClass(
 
         const boardInfo = await getBoard(boardId, apiKey, token);
         this._boardName = boardInfo.name;
-        console.log(`Successfully fetched board name: ${this._boardName}`);
+        console.debug(`Successfully fetched board name: ${this._boardName}`);
       } catch (error) {
         console.error("Failed to fetch board name:", error);
         // Keep _boardName as null, will fall back to default behavior
@@ -168,11 +168,11 @@ const TrelloCardsIndicator = GObject.registerClass(
     }
 
     createCard(list, cardText, edit) {
-      console.log("Creating new card");
+      console.debug("Creating new card");
       const boardName = this._boardName;
 
       const troCommand = `tro create "${boardName}" "${list.name}" -n "${cardText}"`;
-      console.log("Running command", troCommand);
+      console.debug("Running command", troCommand);
       if (edit) {
         troCommand += `EDITOR=nvim ${troCommand} -s`;
         const command = ["kitty", "-e", "zsh", "-l", "-c", troCommand];
@@ -271,7 +271,7 @@ const TrelloCardsIndicator = GObject.registerClass(
         return;
       }
 
-      console.log(
+      console.debug(
         `Refreshing cards for list "${this._listConfig.listName}" on board ${boardId}`,
       );
 
@@ -302,7 +302,7 @@ const TrelloCardsIndicator = GObject.registerClass(
             const cards = list.cards;
             cardCount += cards.length;
 
-            console.log(
+            console.debug(
               `Found matching list "${list.name}" (pattern: "${this._listConfig.listName}") with ${cards.length} cards`,
             );
 
@@ -401,10 +401,10 @@ const TrelloCardsIndicator = GObject.registerClass(
               this.cardsSection.addMenuItem(listItem);
             });
 
-            console.log(
+            console.debug(
               `No lists match pattern "${this._listConfig.listName}" on board ${boardId}`,
             );
-            console.log(
+            console.debug(
               `Available lists on board ${boardId}:`,
               lists.map((l) => `"${l.name}"`).join(", "),
             );
@@ -430,10 +430,12 @@ const TrelloCardsIndicator = GObject.registerClass(
             error.message.includes("HTTP 404") ||
             error.message.includes("invalid")
           ) {
-            console.log("Attempting to fetch available lists for debugging...");
+            console.debug(
+              "Attempting to fetch available lists for debugging...",
+            );
             fetchAvailableLists(boardId, apiKey, token)
               .then((availableLists) => {
-                console.log(
+                console.debug(
                   "Available lists for debugging:",
                   availableLists.map((l) => `"${l.name}"`).join(", "),
                 );
@@ -605,7 +607,7 @@ export default class TrelloCardsExtension extends Extension {
           try {
             indicator.refreshCards();
             refreshCount++;
-            console.log(
+            console.debug(
               `Successfully refreshed: ${indicator._listConfig.listName}`,
             );
             resolve("success");
